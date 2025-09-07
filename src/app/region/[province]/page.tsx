@@ -16,8 +16,9 @@ interface PageParams {
 }
 
 // 메타데이터 생성
-export async function generateMetadata({ params }: { params: PageParams }): Promise<Metadata> {
-  const province = getProvinceData(params.province)
+export async function generateMetadata({ params }: { params: Promise<PageParams> }): Promise<Metadata> {
+  const { province: provinceId } = await params
+  const province = getProvinceData(provinceId)
 
   if (!province) {
     return {
@@ -39,7 +40,7 @@ export async function generateMetadata({ params }: { params: PageParams }): Prom
       locale: 'ko_KR',
     },
     alternates: {
-      canonical: `/region/${params.province}`,
+      canonical: `/region/${provinceId}`,
     },
   }
 }
@@ -51,8 +52,9 @@ export async function generateStaticParams() {
   }))
 }
 
-export default function RegionLandingPage({ params }: { params: PageParams }) {
-  const province = getProvinceData(params.province)
+export default async function RegionLandingPage({ params }: { params: Promise<PageParams> }) {
+  const { province: provinceId } = await params
+  const province = getProvinceData(provinceId)
 
   if (!province) {
     notFound()
