@@ -1,0 +1,25 @@
+# robots.txt for babymag.co.kr
+# 비비막 마사지샵 플랫폼
+
+User-agent: *
+Allow: /
+
+# 주요 페이지들
+Allow: /massage-promotion
+Allow: /region/
+Allow: /shop/
+Allow: /community
+Allow: /business
+Allow: /contact
+
+# 제외할 페이지들 (필요시)
+Disallow: /api/
+Disallow: /admin/
+Disallow: /_next/
+Disallow: /private/
+
+# 사이트맵 위치
+Sitemap: https://babymag.co.kr/sitemap.xml
+
+# 크롤링 속도 제한 (선택사항)
+Crawl-delay: 1

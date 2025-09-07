@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300">
+  <rect width="400" height="300" fill="#fdf2f8" />
+  <path d="M170,120 C170,100 150,100 150,120 C150,140 170,160 200,180 C230,160 250,140 250,120 C250,100 230,100 230,120 C230,100 210,100 200,110 C190,100 170,100 170,120 Z" fill="#ec4899" opacity="0.5"/>
+  <text x="50%" y="70%" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#be185d" text-anchor="middle">
+    커플 마사지
+  </text>
+</svg>

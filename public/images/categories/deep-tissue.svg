@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300">
+  <rect width="400" height="300" fill="#dbeafe" />
+  <circle cx="200" cy="120" r="50" fill="#3b82f6" opacity="0.4"/>
+  <circle cx="200" cy="120" r="35" fill="#2563eb" opacity="0.5"/>
+  <circle cx="200" cy="120" r="20" fill="#1d4ed8" opacity="0.6"/>
+  <text x="50%" y="70%" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#1e40af" text-anchor="middle">
+    딥티슈
+  </text>
+</svg>

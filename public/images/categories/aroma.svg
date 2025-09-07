@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300">
+  <rect width="400" height="300" fill="#fce7f3" />
+  <circle cx="200" cy="120" r="45" fill="#ec4899" opacity="0.3"/>
+  <path d="M180,140 Q200,100 220,140" fill="none" stroke="#f472b6" stroke-width="3"/>
+  <path d="M170,130 Q200,90 230,130" fill="none" stroke="#f9a8d4" stroke-width="2" opacity="0.5"/>
+  <text x="50%" y="70%" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#db2777" text-anchor="middle">
+    아로마 테라피
+  </text>
+</svg>
