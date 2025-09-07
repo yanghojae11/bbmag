@@ -1,10 +1,11 @@
 'use client'
 
-import { ArrowLeft, Star, MapPin, Clock, Filter, Loader2, ChevronDown, Search } from 'lucide-react'
-import Image from 'next/image'
+import { ArrowLeft, Star, MapPin, Clock, ChevronDown, Search } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState, useEffect, useCallback } from 'react'
+import InfiniteScroll from '@/components/InfiniteScroll'
+import OptimizedImage from '@/components/OptimizedImage'
 
 interface MassageShop {
   id: number
@@ -66,7 +67,7 @@ const seoulDistricts = [
   { id: 'seodaemun', name: '서대문' }
 ]
 
-// 테마 데이터 (FeatureIcons와 동일하게 수정)
+// 테마 데이터
 const themes = [
   { id: 'all', name: '전체' },
   { id: 'new', name: '신규' },
@@ -91,7 +92,7 @@ const initialMassageShops: MassageShop[] = [
     price: '90,000',
     originalPrice: '120,000',
     discount: 25,
-    image: '/images/shops/shop-1.jpg',
+    image: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=400&h=300&fit=crop',
     services: ['스웨디시', '아로마', '딥티슈'],
     openTime: '09:00 - 24:00',
     badge: '인기'
@@ -104,7 +105,7 @@ const initialMassageShops: MassageShop[] = [
     rating: 4.7,
     reviews: 892,
     price: '120,000',
-    image: '/images/shops/shop-2.jpg',
+    image: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=300&fit=crop',
     services: ['아로마', '핫스톤', '커플'],
     openTime: '10:00 - 22:00'
   },
@@ -118,7 +119,7 @@ const initialMassageShops: MassageShop[] = [
     price: '85,000',
     originalPrice: '100,000',
     discount: 15,
-    image: '/images/shops/shop-3.jpg',
+    image: 'https://images.unsplash.com/photo-1596178060810-0356cc2ef8bd?w=400&h=300&fit=crop',
     services: ['딥티슈', '스포츠', '재활'],
     openTime: '09:00 - 23:00',
     badge: '신규'
@@ -131,7 +132,7 @@ const initialMassageShops: MassageShop[] = [
     rating: 4.9,
     reviews: 2341,
     price: '150,000',
-    image: '/images/shops/shop-4.jpg',
+    image: 'https://images.unsplash.com/photo-1560750588-73207b1ef5b8?w=400&h=300&fit=crop',
     services: ['스파', '전신', '페이셜'],
     openTime: '08:00 - 22:00',
     badge: 'BEST'
@@ -144,7 +145,7 @@ const initialMassageShops: MassageShop[] = [
     rating: 4.5,
     reviews: 1876,
     price: '70,000',
-    image: '/images/shops/shop-5.jpg',
+    image: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=400&h=300&fit=crop',
     services: ['24시간', '스웨디시', '타이'],
     openTime: '24시간',
     badge: '24H'
@@ -163,6 +164,14 @@ const generateMoreShops = (startId: number): MassageShop[] => {
     '강남구 삼성동', '서초구 방배동', '강남구 도곡동', '서초구 잠원동'
   ]
 
+  const imageIds = [
+    'photo-1544161515-4ab6ce6db874',
+    'photo-1571019613454-1cb2f99b2d8b', 
+    'photo-1596178060810-0356cc2ef8bd',
+    'photo-1560750588-73207b1ef5b8',
+    'photo-1540555700478-4be289fbecef'
+  ]
+
   return Array.from({ length: 10 }, (_, i) => {
     const hasDiscount = Math.random() > 0.6
     const originalPriceValue = Math.floor(Math.random() * 30 + 100)
@@ -176,10 +185,10 @@ const generateMoreShops = (startId: number): MassageShop[] => {
       distance: `${(Math.random() * 3 + 0.5).toFixed(1)}km`,
       rating: Number((Math.random() * 0.5 + 4.3).toFixed(1)),
       reviews: Math.floor(Math.random() * 2000 + 100),
-      price: `${finalPrice}000`,
-      originalPrice: hasDiscount ? `${originalPriceValue}000` : undefined,
+      price: `${finalPrice},000`,
+      originalPrice: hasDiscount ? `${originalPriceValue},000` : undefined,
       discount: hasDiscount ? discountPercent : undefined,
-      image: `/images/shops/shop-${((startId + i - 1) % 5) + 1}.jpg`,
+      image: `https://images.unsplash.com/${imageIds[i % imageIds.length]}?w=400&h=300&fit=crop`,
       services: ['스웨디시', '아로마', '딥티슈', '타이', '핫스톤'].slice(0, Math.floor(Math.random() * 3 + 2)),
       openTime: Math.random() > 0.7 ? '24시간' : '09:00 - 23:00',
       badge: Math.random() > 0.8 ? ['인기', '신규', 'BEST'][Math.floor(Math.random() * 3)] : undefined
@@ -190,6 +199,7 @@ const generateMoreShops = (startId: number): MassageShop[] => {
 export default function MassagePromotionDetail() {
   const router = useRouter()
   const [massageShops, setMassageShops] = useState<MassageShop[]>(initialMassageShops)
+  const [filteredShops, setFilteredShops] = useState<MassageShop[]>(initialMassageShops)
   const [loading, setLoading] = useState(false)
   const [hasMore, setHasMore] = useState(true)
   const [page, setPage] = useState(1)
@@ -223,25 +233,31 @@ export default function MassagePromotionDetail() {
     setLoading(false)
   }, [loading, hasMore, page, massageShops.length])
 
-  // 스크롤 이벤트 핸들러
+  // 필터링 로직
   useEffect(() => {
-    const handleScroll = () => {
-      if (window.innerHeight + document.documentElement.scrollTop 
-          >= document.documentElement.offsetHeight - 1000) {
-        loadMoreShops()
-      }
+    let filtered = [...massageShops]
+
+    // 지역 필터
+    if (selectedRegion !== 'all') {
+      // 실제 구현에서는 API에서 필터링된 데이터를 받아와야 함
+      filtered = massageShops // 현재는 모든 데이터 표시
     }
 
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [loadMoreShops])
+    // 테마 필터
+    if (selectedTheme !== 'all') {
+      // 실제 구현에서는 API에서 필터링된 데이터를 받아와야 함
+      filtered = massageShops // 현재는 모든 데이터 표시
+    }
+
+    setFilteredShops(filtered)
+  }, [massageShops, selectedRegion, selectedDistrict, selectedTheme])
 
   // URL 파라미터로 필터 자동 설정
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search)
     const regionParam = urlParams.get('region')
     const districtParam = urlParams.get('district')
-    const themeParam = urlParams.get('theme') // 테마 파라미터 추가
+    const themeParam = urlParams.get('theme')
     
     if (regionParam) {
       setSelectedRegion(regionParam)
@@ -251,7 +267,7 @@ export default function MassagePromotionDetail() {
       setSelectedDistrict(districtParam)
     }
     
-    if (themeParam) { // 테마 파라미터 처리
+    if (themeParam) {
       setSelectedTheme(themeParam)
     }
   }, [])
@@ -259,7 +275,7 @@ export default function MassagePromotionDetail() {
   // 지역 선택 핸들러
   const handleRegionSelect = (regionId: string) => {
     setSelectedRegion(regionId)
-    setSelectedDistrict('all') // 지역 변경시 세부 지역 초기화
+    setSelectedDistrict('all')
     setShowRegionDropdown(false)
   }
 
@@ -275,9 +291,107 @@ export default function MassagePromotionDetail() {
     setShowThemeDropdown(false)
   }
 
+  // 드롭다운 외부 클릭 시 닫기
+  useEffect(() => {
+    const handleClickOutside = () => {
+      setShowRegionDropdown(false)
+      setShowDistrictDropdown(false)
+      setShowThemeDropdown(false)
+    }
+
+    document.addEventListener('click', handleClickOutside)
+    return () => document.removeEventListener('click', handleClickOutside)
+  }, [])
+
   const getRegionName = (id: string) => regions.find(r => r.id === id)?.name || '전국'
   const getDistrictName = (id: string) => seoulDistricts.find(d => d.id === id)?.name || '전체'
   const getThemeName = (id: string) => themes.find(t => t.id === id)?.name || '전체'
+
+  // 개별 마사지샵 카드 렌더링 함수 (InfiniteScroll 컴포넌트용)
+  const renderMassageShop = (shop: MassageShop, index: number) => (
+    <Link key={shop.id} href={`/massage/${shop.id}`}>
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
+        <div className="flex">
+          {/* 이미지 */}
+          <div className="relative w-24 h-20 flex-shrink-0">
+            <OptimizedImage
+              src={shop.image}
+              alt={shop.name}
+              width={96}
+              height={80}
+              className="object-cover w-full h-full"
+            />
+            {shop.badge && (
+              <div className="absolute top-1 left-1 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded">
+                {shop.badge}
+              </div>
+            )}
+          </div>
+
+          {/* 정보 */}
+          <div className="flex-1 p-3">
+            <div className="flex justify-between items-start mb-2">
+              <div className="flex-1">
+                <h3 className="font-medium text-gray-900 text-sm mb-1">
+                  {shop.name}
+                </h3>
+                
+                <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
+                  <MapPin className="w-3 h-3" />
+                  <span>{shop.location}</span>
+                  <span>·</span>
+                  <span>{shop.distance}</span>
+                </div>
+
+                <div className="flex items-center gap-2 text-xs text-gray-500 mb-2">
+                  <Clock className="w-3 h-3" />
+                  <span>{shop.openTime}</span>
+                </div>
+
+                <div className="flex items-center gap-1 mb-2">
+                  <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                  <span className="text-xs font-medium text-gray-900">
+                    {shop.rating}
+                  </span>
+                  <span className="text-xs text-gray-500">
+                    ({shop.reviews.toLocaleString()})
+                  </span>
+                </div>
+
+                <div className="flex flex-wrap gap-1">
+                  {shop.services.map((service, index) => (
+                    <span
+                      key={index}
+                      className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded"
+                    >
+                      {service}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* 가격 */}
+              <div className="text-right ml-2">
+                {shop.discount && (
+                  <div className="bg-red-500 text-white text-xs px-1.5 py-0.5 rounded mb-1">
+                    {shop.discount}%
+                  </div>
+                )}
+                {shop.originalPrice && (
+                  <div className="text-xs text-gray-400 line-through">
+                    {shop.originalPrice}원
+                  </div>
+                )}
+                <div className="font-bold text-gray-900">
+                  {shop.price}원~
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Link>
+  )
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -307,7 +421,8 @@ export default function MassagePromotionDetail() {
               {/* 지역 필터 */}
               <div className="relative">
                 <button
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.stopPropagation()
                     setShowRegionDropdown(!showRegionDropdown)
                     setShowDistrictDropdown(false)
                     setShowThemeDropdown(false)
@@ -324,7 +439,10 @@ export default function MassagePromotionDetail() {
                       {regions.map((region) => (
                         <button
                           key={region.id}
-                          onClick={() => handleRegionSelect(region.id)}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleRegionSelect(region.id)
+                          }}
                           className={`px-3 py-2 text-sm rounded hover:bg-gray-100 text-center transition-colors ${
                             selectedRegion === region.id ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-700'
                           }`}
@@ -337,11 +455,12 @@ export default function MassagePromotionDetail() {
                 )}
               </div>
 
-              {/* 서울 세부 지역 필터 (서울 선택시만 표시) */}
+              {/* 서울 세부 지역 필터 */}
               {selectedRegion === 'seoul' && (
                 <div className="relative">
                   <button
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation()
                       setShowDistrictDropdown(!showDistrictDropdown)
                       setShowRegionDropdown(false)
                       setShowThemeDropdown(false)
@@ -358,7 +477,10 @@ export default function MassagePromotionDetail() {
                         {seoulDistricts.map((district) => (
                           <button
                             key={district.id}
-                            onClick={() => handleDistrictSelect(district.id)}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              handleDistrictSelect(district.id)
+                            }}
                             className={`px-3 py-2 text-sm rounded hover:bg-gray-100 text-center transition-colors ${
                               selectedDistrict === district.id ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-700'
                             }`}
@@ -375,7 +497,8 @@ export default function MassagePromotionDetail() {
               {/* 테마 필터 */}
               <div className="relative">
                 <button
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.stopPropagation()
                     setShowThemeDropdown(!showThemeDropdown)
                     setShowRegionDropdown(false)
                     setShowDistrictDropdown(false)
@@ -392,7 +515,10 @@ export default function MassagePromotionDetail() {
                       {themes.map((theme) => (
                         <button
                           key={theme.id}
-                          onClick={() => handleThemeSelect(theme.id)}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleThemeSelect(theme.id)
+                          }}
                           className={`px-3 py-2 text-sm rounded hover:bg-gray-100 text-center transition-colors ${
                             selectedTheme === theme.id ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-700'
                           }`}
@@ -414,7 +540,12 @@ export default function MassagePromotionDetail() {
             {/* 지역 필터 */}
             <div className="relative">
               <button
-                onClick={() => setShowRegionDropdown(!showRegionDropdown)}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setShowRegionDropdown(!showRegionDropdown)
+                  setShowDistrictDropdown(false)
+                  setShowThemeDropdown(false)
+                }}
                 className="w-full flex items-center justify-between px-3 py-2 border border-gray-300 rounded-lg text-sm"
               >
                 <span>{getRegionName(selectedRegion)}</span>
@@ -427,7 +558,10 @@ export default function MassagePromotionDetail() {
                     {regions.map((region) => (
                       <button
                         key={region.id}
-                        onClick={() => handleRegionSelect(region.id)}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleRegionSelect(region.id)
+                        }}
                         className={`w-full px-3 py-2 text-sm rounded hover:bg-gray-100 text-left ${
                           selectedRegion === region.id ? 'bg-blue-50 text-blue-600' : ''
                         }`}
@@ -440,11 +574,16 @@ export default function MassagePromotionDetail() {
               )}
             </div>
 
-            {/* 세부 지역 (서울 선택시만) */}
+            {/* 세부 지역 */}
             {selectedRegion === 'seoul' ? (
               <div className="relative">
                 <button
-                  onClick={() => setShowDistrictDropdown(!showDistrictDropdown)}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setShowDistrictDropdown(!showDistrictDropdown)
+                    setShowRegionDropdown(false)
+                    setShowThemeDropdown(false)
+                  }}
                   className="w-full flex items-center justify-between px-3 py-2 border border-gray-300 rounded-lg text-sm"
                 >
                   <span>{getDistrictName(selectedDistrict)}</span>
@@ -457,7 +596,10 @@ export default function MassagePromotionDetail() {
                       {seoulDistricts.slice(0, 10).map((district) => (
                         <button
                           key={district.id}
-                          onClick={() => handleDistrictSelect(district.id)}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleDistrictSelect(district.id)
+                          }}
                           className={`w-full px-3 py-2 text-sm rounded hover:bg-gray-100 text-left ${
                             selectedDistrict === district.id ? 'bg-blue-50 text-blue-600' : ''
                           }`}
@@ -476,7 +618,12 @@ export default function MassagePromotionDetail() {
             {/* 테마 필터 */}
             <div className="relative">
               <button
-                onClick={() => setShowThemeDropdown(!showThemeDropdown)}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setShowThemeDropdown(!showThemeDropdown)
+                  setShowRegionDropdown(false)
+                  setShowDistrictDropdown(false)
+                }}
                 className="w-full flex items-center justify-between px-3 py-2 border border-gray-300 rounded-lg text-sm"
               >
                 <span className="truncate">{getThemeName(selectedTheme)}</span>
@@ -489,7 +636,10 @@ export default function MassagePromotionDetail() {
                     {themes.slice(0, 10).map((theme) => (
                       <button
                         key={theme.id}
-                        onClick={() => handleThemeSelect(theme.id)}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleThemeSelect(theme.id)
+                        }}
                         className={`w-full px-3 py-2 text-sm rounded hover:bg-gray-100 text-left ${
                           selectedTheme === theme.id ? 'bg-blue-50 text-blue-600' : ''
                         }`}
@@ -522,107 +672,21 @@ export default function MassagePromotionDetail() {
         </div>
       </div>
 
-      {/* 마사지샵 리스트 */}
-      <div className="px-4 py-4 space-y-4">
-        {massageShops.map((shop) => (
-          <Link key={shop.id} href={`/massage/${shop.id}`}>
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
-              <div className="flex">
-                {/* 이미지 */}
-                <div className="relative w-24 h-20 flex-shrink-0">
-                  <Image
-                    src={shop.image}
-                    alt={shop.name}
-                    fill
-                    className="object-cover"
-                  />
-                  {shop.badge && (
-                    <div className="absolute top-1 left-1 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded">
-                      {shop.badge}
-                    </div>
-                  )}
-                </div>
-
-                {/* 정보 */}
-                <div className="flex-1 p-3">
-                  <div className="flex justify-between items-start mb-2">
-                    <div className="flex-1">
-                      <h3 className="font-medium text-gray-900 text-sm mb-1">
-                        {shop.name}
-                      </h3>
-                      
-                      <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
-                        <MapPin className="w-3 h-3" />
-                        <span>{shop.location}</span>
-                        <span>·</span>
-                        <span>{shop.distance}</span>
-                      </div>
-
-                      <div className="flex items-center gap-2 text-xs text-gray-500 mb-2">
-                        <Clock className="w-3 h-3" />
-                        <span>{shop.openTime}</span>
-                      </div>
-
-                      <div className="flex items-center gap-1 mb-2">
-                        <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                        <span className="text-xs font-medium text-gray-900">
-                          {shop.rating}
-                        </span>
-                        <span className="text-xs text-gray-500">
-                          ({shop.reviews.toLocaleString()})
-                        </span>
-                      </div>
-
-                      <div className="flex flex-wrap gap-1">
-                        {shop.services.map((service, index) => (
-                          <span
-                            key={index}
-                            className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded"
-                          >
-                            {service}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* 가격 */}
-                    <div className="text-right ml-2">
-                      {shop.discount && (
-                        <div className="bg-red-500 text-white text-xs px-1.5 py-0.5 rounded mb-1">
-                          {shop.discount}%
-                        </div>
-                      )}
-                      {shop.originalPrice && (
-                        <div className="text-xs text-gray-400 line-through">
-                          {shop.originalPrice}원
-                        </div>
-                      )}
-                      <div className="font-bold text-gray-900">
-                        {shop.price}원~
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </Link>
-        ))}
-      </div>
-
-      {/* 로딩 인디케이터 */}
-      {loading && (
-        <div className="flex justify-center items-center py-8">
-          <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
-          <span className="ml-2 text-sm text-gray-500">더 많은 마사지샵을 불러오는 중...</span>
-        </div>
-      )}
-
-      {/* 더 이상 데이터가 없을 때 */}
-      {!hasMore && (
-        <div className="text-center py-8">
-          <p className="text-sm text-gray-500">모든 마사지샵을 확인했습니다</p>
-        </div>
-      )}
+      {/* InfiniteScroll 컴포넌트 사용 */}
+      <InfiniteScroll
+        items={filteredShops}
+        loadMore={loadMoreShops}
+        hasMore={hasMore}
+        isLoading={loading}
+        renderItem={renderMassageShop}
+        threshold={100}
+        className="px-4 py-4 space-y-4"
+        emptyComponent={
+          <div className="text-center py-12">
+            <p className="text-gray-500">조건에 맞는 마사지샵이 없습니다.</p>
+          </div>
+        }
+      />
     </div>
   )
 }

@@ -12,7 +12,6 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "preserve",
-    "jsxImportSource": "same-runtime/dist",
     "incremental": true,
     "plugins": [
       {
@@ -28,8 +27,7 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
-    "next-env.d.ts",
-    "build/types/**/*.ts"
+    "next-env.d.ts"
   ],
   "exclude": ["node_modules"]
 }
