@@ -1,4 +1,4 @@
-// app/massage/[slug]/page.tsx
+// app/shop/[slug]/page.tsx
 import { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Header from '@/components/Header'
@@ -32,8 +32,9 @@ interface MassageShop {
 }
 
 // 메타데이터 생성
-export async function generateMetadata({ params }: { params: PageParams }): Promise<Metadata> {
-  const slugParts = params.slug.split('-')
+export async function generateMetadata({ params }: { params: Promise<PageParams> }): Promise<Metadata> {
+  const { slug } = await params
+  const slugParts = slug.split('-')
   
   if (slugParts.length !== 3) {
     return {
@@ -71,7 +72,7 @@ export async function generateMetadata({ params }: { params: PageParams }): Prom
       description,
     },
     alternates: {
-      canonical: `/massage/${params.slug}`,
+      canonical: `/massage/${slug}`,
     },
   }
 }
@@ -130,8 +131,9 @@ function getMockMassageShops(cityId: string, typeId: string): MassageShop[] {
   ]
 }
 
-export default function MassageThemePage({ params }: { params: PageParams }) {
-  const slugParts = params.slug.split('-')
+export default async function MassageThemePage({ params }: { params: Promise<PageParams> }) {
+  const { slug } = await params
+  const slugParts = slug.split('-')
   
   if (slugParts.length !== 3) {
     notFound()
